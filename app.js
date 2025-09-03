@@ -1,109 +1,50 @@
-// Calculator without eval – standard two-operand logic with operator precedence on equals
-const display = document.getElementById('display');
-const historyEl = document.getElementById('history');
-const keys = document.querySelector('.keys');
-
-let current = '0';     // текущо въведено число (стринг)
-let prev = null;       // предишен операнд (число)
-let op = null;         // текуща операция: + − × ÷ %
-let justEvaluated = false;
-
-const fmt = n => {
-  // форматиране без загуба на десетични, ограничаваме до 12 знака
-  const s = Number(n).toString();
-  const [int, dec] = s.split('.');
-  const intFmt = Number(int).toLocaleString('bg-BG');
-  return dec ? `${intFmt}.${dec.slice(0,10)}` : intFmt;
-};
-
-function updateScreen() {
-  display.textContent = current;
-  historyEl.textContent = prev !== null && op ? `${fmt(prev)} ${op}` : '';
+* { box-sizing: border-box; }
+:root {
+  --bg: #0b1220; --panel:#121a2b; --muted:#2a3550;
+  --txt:#e8eefc; --op:#1ea7fd; --eq:#20c997; --border:#1a2540;
 }
-
-function inputDigit(d) {
-  if (justEvaluated) { current = '0'; justEvaluated = false; }
-  if (current === '0' && d !== '.') current = d;
-  else current += d;
+:root.light {
+  --bg:#f6f8ff; --panel:#ffffff; --muted:#e9eef7;
+  --txt:#0f1830; --op:#bfe4ff; --eq:#c8f5e9; --border:#dbe4ff;
 }
-
-function inputDot() {
-  if (justEvaluated) { current = '0'; justEvaluated = false; }
-  if (!current.includes('.')) current += '.';
+body {
+  margin: 0; font-family: system-ui, Arial, sans-serif; color: var(--txt);
+  background: radial-gradient(1200px 800px at 50% -10%, var(--bg), #070c16);
 }
+.wrap { max-width: 860px; margin: 28px auto; padding: 0 14px; display:grid; grid-template-columns: 1fr 260px; gap:16px; }
+.topbar { grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between; }
+h1 { margin: 0; font-size: 22px; opacity:.9; }
+#themeToggle { border:none; background:var(--muted); color:var(--txt); padding:8px 10px; border-radius:10px; cursor:pointer; }
 
-function setOp(nextOp) {
-  if (op && prev !== null) {
-    // ако сменяме оператора преди equals, изчисляваме междинно
-    compute();
-  } else {
-    prev = Number(current);
-  }
-  op = nextOp;
-  current = '0';
+.calc { background: var(--panel); border:1px solid var(--border); border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.25); }
+.screen { padding:16px; border-bottom: 1px solid var(--border); min-height:96px; display:flex; flex-direction:column; justify-content:flex-end; }
+.history { min-height:22px; opacity:.7; font-size:14px; text-align:right; word-break: break-all; }
+.display { font-size:36px; font-weight:700; text-align:right; word-break: break-all; }
+
+.keys { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:12px; }
+.keys-science { border-bottom:1px solid var(--border); }
+button {
+  border:none; padding:14px 10px; border-radius:12px; font-size:18px; color:var(--txt);
+  background:#1a2743; cursor:pointer; transition: transform .06s ease, filter .2s;
 }
+:root.light button { background:#eef3ff; }
+button:hover { filter:brightness(1.06); }
+button:active { transform: translateY(1px); }
+button.op { background: var(--op); color:#00121c; font-weight:700; }
+:root.light button.op { color:#04263a; }
+button.eq { background: var(--eq); color:#00140d; font-weight:800; }
+button.muted { background: var(--muted); }
+button.zero { grid-column: span 2; }
 
-function percent(value) {
-  // стандартно поведение: a % b = a * (b/100)
-  if (prev !== null && op) return prev * (Number(value) / 100);
-  // ако няма предишен – просто процент от 1
-  return Number(value) / 100;
+.historyPanel {
+  background: var(--panel); border:1px solid var(--border); border-radius:16px; padding:12px;
+  max-height: 460px; overflow:auto;
 }
+.historyPanel h3 { margin: 6px 0 8px; font-size: 16px; }
+.historyPanel ol { margin:0; padding-left: 18px; }
+.historyPanel li { margin: 4px 0; font-size: 14px; opacity:.9; }
 
-function compute() {
-  const a = prev ?? 0;
-  let b = Number(current);
-
-  if (op === '%') b = percent(current); // процент спрямо prev
-
-  let res = a;
-  switch (op) {
-    case '+': res = a + b; break;
-    case '−': res = a - b; break;
-    case '×': res = a * b; break;
-    case '÷': res = b === 0 ? NaN : a / b; break;
-    case '%': res = a + b; break; // превърнахме b в a*(b/100) и го прилагаме като a + b (често използвано)
-  }
-
-  prev = null;
-  op = null;
-  current = Number.isFinite(res) ? String(+res.toFixed(12)).replace(/\.?0+$/,'') : 'NaN';
-  justEvaluated = true;
+.hint { grid-column: 1 / -1; text-align:center; opacity:.6; font-size:12px; margin-top:6px; }
+@media (max-width: 760px) {
+  .wrap { grid-template-columns: 1fr; }
 }
-
-function clearAll() {
-  current = '0'; prev = null; op = null; justEvaluated = false;
-}
-
-function delOne() {
-  if (justEvaluated) { clearAll(); return; }
-  if (current.length <= 1 || (current.length === 2 && current.startsWith('-'))) current = '0';
-  else current = current.slice(0, -1);
-}
-
-keys.addEventListener('click', (e) => {
-  const t = e.target;
-  if (t.dataset.num) { inputDigit(t.dataset.num); updateScreen(); return; }
-  if (t.dataset.dot !== undefined) { inputDot(); updateScreen(); return; }
-  if (t.dataset.op) { setOp(t.dataset.op); updateScreen(); return; }
-  if (t.dataset.action === 'eq') { if (op) compute(); updateScreen(); return; }
-  if (t.dataset.action === 'clear') { clearAll(); updateScreen(); return; }
-  if (t.dataset.action === 'del') { delOne(); updateScreen(); return; }
-});
-
-window.addEventListener('keydown', (e) => {
-  const k = e.key;
-  if (/\d/.test(k)) { inputDigit(k); }
-  else if (k === '.' || k === ',') { inputDot(); }
-  else if (k === '+') { setOp('+'); }
-  else if (k === '-') { setOp('−'); }
-  else if (k === '*') { setOp('×'); }
-  else if (k === '/') { setOp('÷'); }
-  else if (k === '%') { setOp('%'); }
-  else if (k === 'Enter' || k === '=') { if (op) compute(); }
-  else if (k === 'Backspace') { delOne(); }
-  else if (k === 'Escape') { clearAll(); }
-  updateScreen();
-});
-
-updateScreen();
