@@ -8,12 +8,23 @@
 </head>
 <body>
   <main class="wrap">
-    <h1>🧮 TANASHI Calculator</h1>
+    <header class="topbar">
+      <h1>🧮 TANASHI Calculator</h1>
+      <button id="themeToggle" title="Смени тема">🌓</button>
+    </header>
 
     <div class="calc">
       <div class="screen">
         <div id="history" class="history"></div>
         <div id="display" class="display">0</div>
+      </div>
+
+      <!-- научен ред -->
+      <div class="keys keys-science">
+        <button data-fn="sqrt" class="muted">√x</button>
+        <button data-fn="square" class="muted">x²</button>
+        <button data-fn="inv" class="muted">1/x</button>
+        <button data-fn="neg" class="muted">±</button>
       </div>
 
       <div class="keys">
@@ -43,7 +54,15 @@
       </div>
     </div>
 
-    <p class="hint">Поддържа клавиатура: 0–9, + − * /, %, Enter (=), Backspace (DEL), Esc (AC).</p>
+    <aside class="historyPanel">
+      <h3>История</h3>
+      <ol id="log"></ol>
+    </aside>
+
+    <p class="hint">
+      Клавиатура: 0–9, + − * /, %, Enter (=), Backspace (DEL), Esc (AC).<br>
+      Научни: R=√, Q=x², I=1/x, P=±, T=тема.
+    </p>
   </main>
 
   <script src="app.js"></script>
